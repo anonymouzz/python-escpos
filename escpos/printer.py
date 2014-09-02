@@ -15,10 +15,11 @@ from escpos import *
 from constants import *
 from exceptions import *
 
+
 class Usb(Escpos):
     """ Define USB printer """
 
-    def __init__(self, idVendor, idProduct, interface=0, in_ep=0x82, out_ep=0x01):
+    def __init__(self, idVendor, idProduct, interface=0, in_ep=0x82, out_ep=0x01, barcode=True, dpi=180):
         """
         @param idVendor  : Vendor ID
         @param idProduct : Product ID
@@ -31,8 +32,9 @@ class Usb(Escpos):
         self.interface = interface
         self.in_ep     = in_ep
         self.out_ep    = out_ep
-	self.open()
-
+        self.barcode   = barcode
+        self.dpi       = dpi
+        self.open()
 
     def open(self):
         """ Search device on USB tree and set is as escpos device """
@@ -52,11 +54,9 @@ class Usb(Escpos):
         except usb.core.USBError as e:
             print "Could not set configuration: %s" % str(e)
 
-
     def _raw(self, msg):
         """ Print any command sent in raw format """
         self.device.write(self.out_ep, msg, self.interface)
-
 
     def __del__(self):
         """ Release USB interface """
@@ -65,11 +65,10 @@ class Usb(Escpos):
         self.device = None
 
 
-
 class Serial(Escpos):
     """ Define Serial printer """
 
-    def __init__(self, devfile="/dev/ttyS0", baudrate=9600, bytesize=8, timeout=1):
+    def __init__(self, devfile="/dev/ttyS0", baudrate=9600, bytesize=8, timeout=1, barcode=True, dpi=180):
         """
         @param devfile  : Device file under dev filesystem
         @param baudrate : Baud rate for serial transmission
@@ -80,8 +79,9 @@ class Serial(Escpos):
         self.baudrate = baudrate
         self.bytesize = bytesize
         self.timeout  = timeout
+        self.barcode = barcode
+        self.dpi = 180
         self.open()
-
 
     def open(self):
         """ Setup serial port and set is as escpos device """
@@ -92,11 +92,9 @@ class Serial(Escpos):
         else:
             print "Unable to open serial printer on: %s" % self.devfile
 
-
     def _raw(self, msg):
         """ Print any command sent in raw format """
         self.device.write(msg)
-
 
     def __del__(self):
         """ Close Serial interface """
@@ -104,19 +102,19 @@ class Serial(Escpos):
             self.device.close()
 
 
-
 class Network(Escpos):
     """ Define Network printer """
 
-    def __init__(self,host,port=9100):
+    def __init__(self, host, port=9100, barcode=True, dpi=180):
         """
         @param host : Printer's hostname or IP address
         @param port : Port to write to
         """
         self.host = host
         self.port = port
+        self.barcode = barcode
+        self.dpi = 180
         self.open()
-
 
     def open(self):
         """ Open TCP socket and set it as escpos device """
@@ -126,16 +124,13 @@ class Network(Escpos):
         if self.device is None:
             print "Could not open socket for %s" % self.host
 
-
     def _raw(self, msg):
         """ Print any command sent in raw format """
         self.device.send(msg)
 
-
     def __del__(self):
         """ Close TCP connection """
         self.device.close()
-
 
 
 class File(Escpos):
@@ -148,19 +143,16 @@ class File(Escpos):
         self.devfile = devfile
         self.open()
 
-
     def open(self):
         """ Open system file """
-	self.device = open(self.devfile, "wb")
+        self.device = open(self.devfile, "wb")
 
         if self.device is None:
             print "Could not open the specified file %s" % self.devfile
 
-
     def _raw(self, msg):
         """ Print any command sent in raw format """
-        self.device.write(msg);
-
+        self.device.write(msg)
 
     def __del__(self):
         """ Close system file """

@@ -1,6 +1,12 @@
 """ ESC/POS Commands (Constants) """
 
+POSTFIX = '\n\n\n'
+
+MAX_QR_BOX_SIZE = 7
 # Feed control sequences
+FF        = '\x0c'
+NUL       = '\x00'
+
 CTL_LF    = '\x0a'             # Print and line feed
 CTL_FF    = '\x0c'             # Form feed
 CTL_CR    = '\x0d'             # Carriage return
@@ -33,6 +39,7 @@ BARCODE_EAN8    = '\x1d\x6b\x03' # Barcode type EAN8
 BARCODE_CODE39  = '\x1d\x6b\x04' # Barcode type CODE39
 BARCODE_ITF     = '\x1d\x6b\x05' # Barcode type ITF
 BARCODE_NW7     = '\x1d\x6b\x06' # Barcode type NW7
+BARCODE_CODE128 = '\x1d\x6b\x49' # Barcode type CODE128
 
 # Image format
 S_RASTER_N      = '\x1d\x76\x30\x00' # Set raster image normal size
@@ -87,7 +94,7 @@ PAGE_CP_CODE = {
     'cp863'       : 4,
     'cp865'       : 5,
     'cp1251'      : 6,
-    'cp866'       : 7,
+    'cp866'       : '\x09',
     'mac_cyrillic': 8,
     'cp775'       : 9,
     'cp1253'      : 10,
