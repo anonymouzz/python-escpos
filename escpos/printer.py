@@ -156,4 +156,5 @@ class File(Escpos):
 
     def __del__(self):
         """ Close system file """
-        self.device.close()
+        if self.device:
+            self.device.close()
