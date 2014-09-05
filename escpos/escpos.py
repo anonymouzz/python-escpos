@@ -97,7 +97,8 @@ class Escpos(object):
         buffer = ""
 
         # align center
-        text_align = self.text_style.get('align', None)
+        if text_align:
+            text_align = self.text_style.get('align', None)
         self.device.raw(TEXT_STYLE['align']['center'])
 
         self.device.raw(S_RASTER_N)
