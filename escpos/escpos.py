@@ -96,7 +96,8 @@ class Escpos(object):
         cont = 0
         buffer = ""
 
-        # align center 
+        # align center
+        text_align = self.text_style.get('align', None)
         self.device.raw(TEXT_STYLE['align']['center'])
 
         self.device.raw(S_RASTER_N)
@@ -114,7 +115,8 @@ class Escpos(object):
                 buffer = ""
                 cont = 0
         # restore align
-        self.device.raw(TEXT_STYLE['align'][self.text_style['align']])
+        if text_align:
+            self.device.raw(TEXT_STYLE['align'][text_align])
 
     def _convert_image(self, im):
         """ Parse image and prepare it to a printable format """
