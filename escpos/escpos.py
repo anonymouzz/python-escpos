@@ -286,7 +286,8 @@ class Escpos(object):
             self.device.raw(CTL_LF)
         else:
             raise exception.BarcodeCodeError()
-        self.device.raw(TEXT_STYLE['align'][self.text_style['align']])
+        if self.text_style:
+            self.device.raw(TEXT_STYLE['align'][self.text_style.get('align', 'left')])
 
     def writelines(self, text, **kwargs):
         if isinstance(text, unicode) or isinstance(text, str):
