@@ -199,7 +199,7 @@ class Escpos(object):
         self._print_image(pix_line, img_size)
 
     def barcode(self, code, bc, width, height, pos, font):
-        if self.device.printer.barcode:
+        if self.device.printer.font_barcode:
             self._font_barcode(code, bc, width, height, pos, font)
         else:
             self._graph_barcode(code, bc, width, height, pos, font)

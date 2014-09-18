@@ -141,7 +141,7 @@ class File(Escpos):
         @param devfile : Device file under dev filesystem
         """
         self.devfile = devfile
-        self.barcode = barcode
+        self.font_barcode = barcode
         self.open()
 
     def open(self):
