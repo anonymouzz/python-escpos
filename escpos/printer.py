@@ -136,12 +136,13 @@ class Network(Escpos):
 class File(Escpos):
     """ Define Generic file printer """
 
-    def __init__(self, devfile="/dev/usb/lp0", font_barcode=False):
+    def __init__(self, devfile="/dev/usb/lp0", font_barcode=False, dpi=72):
         """
         @param devfile : Device file under dev filesystem
         """
         self.devfile = devfile
         self.font_barcode = font_barcode
+        self.dpi       = dpi
         self.open()
 
     def open(self):
