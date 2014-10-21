@@ -6,18 +6,65 @@
 @license: GPL
 '''
 
-try:
-    import Image
-except ImportError:
-    from PIL import Image
-
-import qrcode
-import barcode
-from barcode.writer import ImageWriter
+import sys
 import time
 
+try:
+    import Image
+    import ImageDraw
+except ImportError:
+    try:
+        from PIL import Image, ImageDraw  # lint:ok
+    except ImportError:
+        sys.stderr.write('PIL not found. Image output disabled.\n\n')
+        Image = ImageDraw = None  # lint:ok
+
+import qrcode
+from barcode import get as get_barcode
+from barcode.writer import BaseWriter, mm2px
 from constants import *
 from exceptions import *
+
+
+if Image is None:
+    ImageWriter = None
+else:
+    class ImageWriter(BaseWriter):
+
+        def __init__(self):
+            BaseWriter.__init__(self, self._init, self._paint_module,
+                                self._paint_text, self._finish)
+            self.format = 'PNG'
+            self.dpi = 300
+            self._image = None
+            self._draw = None
+
+        def _init(self, code):
+            size = self.calculate_size(len(code[0]), len(code), self.dpi)
+            self._image = Image.new('RGB', size, self.background)
+            self._draw = ImageDraw.Draw(self._image)
+
+        def _paint_module(self, xpos, ypos, width, color):
+            size = [(mm2px(xpos, self.dpi), mm2px(ypos, self.dpi)),
+                    (mm2px(xpos + width, self.dpi),
+                     mm2px(ypos + self.module_height, self.dpi))]
+            self._draw.rectangle(size, outline=color, fill=color)
+
+        def _paint_text(self, xpos, ypos):
+            #font = ImageFont.truetype(FONT, self.font_size * 2)
+            #width, height = font.getsize(self.text)
+            #pos = (mm2px(xpos, self.dpi) - width // 2,
+            #       mm2px(ypos, self.dpi) - height // 4)
+            #self._draw.text(pos, self.text, font=font, fill=self.foreground)
+            pass
+
+        def _finish(self):
+            return self._image
+
+        def save(self, filename, output):
+            #filename = '{0}.{1}'.format(filename, self.format.lower())
+            #output.save(filename, self.format.upper())
+            return filename
 
 
 class EscposIO(object):
@@ -122,7 +169,7 @@ class Escpos(object):
 
     def _convert_image(self, im):
         """ Parse image and prepare it to a printable format """
-        pixels = []
+        #pixels = []
         pix_line = ""
         im_left = ""
         im_right = ""
@@ -199,7 +246,6 @@ class Escpos(object):
         self._print_image(pix_line, img_size)
 
     def barcode(self, code, bc, width, height, pos, font):
-        print(self.device.printer.font_barcode)
         if self.device.printer.font_barcode:
             self._font_barcode(code, bc, width, height, pos, font)
         else:
@@ -207,21 +253,19 @@ class Escpos(object):
 
     def _graph_barcode(self, code, bc, width, height, pos, font):
         ''' Print Barcode for the provided string '''
-        img_writer = ImageWriter()
-        dpi = self.device.printer.dpi
-        if width or height:
-            if width >= 1 or width <= 255:
-                if width > 90 and width < 180:
-                    dpi = 180
-                if width > 180:
-                    dpi = 300
-        img_writer.dpi = dpi
-        bcode = barcode.get(bc.lower(), code, writer=img_writer)
-        img = bcode.render().convert('RGB')
-        # convert image for printable format
-        pix_line, img_size = self._convert_image(img)
-        # and print it
-        self._print_image(pix_line, img_size)
+        if ImageWriter:
+            writer = ImageWriter()
+            writer.dpi = self.device.printer.dpi
+            bcode = get_barcode(bc.lower(), code, writer=writer)
+            img = bcode.render().convert('RGB')
+            w, h = img.size
+            img = img.crop((w / 10, 0, w - (w / 10), h - (w / 10) - (h / 10)))  # FIXME
+            # convert image for printable format
+            pix_line, img_size = self._convert_image(img)
+            # and print it
+            self._print_image(pix_line, img_size)
+        else:
+            sys.stderr.write('PIL not found. Image output disabled.\n\n')
 
     def _font_barcode(self, code, bc, width, height, pos, font):
         """ Print Barcode """
